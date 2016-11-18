@@ -1,0 +1,563 @@
+% Copyright © 2012 Loren B. Davis.  ALL RIGHTS RESERVED.
+
+% Prepared with LuaLaTeX in TeX Live 2011.  Also tested with XeLaTeX.
+
+\RequirePackage[l2tabu,orthodox]{nag}
+\documentclass[paper=letter,pagesize=automedia,twoside=false,12pt]{scrartcl}
+
+\usepackage{expl3}
+\usepackage{ifluatex,ifxetex}
+\ifxetex
+       \usepackage{xltxtra}
+       \usepackage{polyglossia}
+       \setmainlanguage[variant=us]{english}
+\else\ifluatex
+       \usepackage{luatextra}
+       \usepackage[english]{babel}
+       \usepackage{lualatex-math}
+\else
+       \usepackage{fixltx2e, realscripts, metalogo}
+       \usepackage[utf8]{inputenx}
+       \usepackage[english]{babel}
+\fi\fi
+
+\usepackage[verbose, babel=false, expansion=false]{microtype}
+\usepackage[leqno]{mathtools}
+\usepackage{amsthm}
+% Override most of these:
+% \usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{ellipsis}
+\usepackage{color}
+\usepackage{float}
+%\usepackage{algorithmicx}
+%\usepackage{algpseudocode}
+%\usepackage{algorithm}
+\usepackage{listings}
+\usepackage{newunicodechar}
+\usepackage{fontspec}
+\usepackage[ math-style=ISO,
+             vargreek-shape=TeX,
+             slash-delimiter=frac
+           ]{unicode-math}
+
+\ExplSyntaxNamesOn
+
+\defaultfontfeatures{ Ligatures=TeX,
+                      Scale=MatchLowercase }
+
+% Uncomment this to use Palatino + Asana Math:
+
+% These fonts are really Palatino:
+\DeclareMicrotypeAlias{PalatinoLinotype}{palatino}
+\DeclareMicrotypeAlias{TeXGyrePagella}{palatino}
+\DeclareMicrotypeAlias{AsanaMath}{palatino}
+
+% The monospaced font is monospaced: (Not currently defined in microtype.)
+\DeclareMicrotypeAlias{Inconsolata}{tt}
+
+% Really Times:
+\DeclareMicrotypeAlias{XITS Math}{ptm}
+\DeclareMicrotypeAlias{XITS}{ptm}
+\DeclareMicrotypeAlias{TeXGyreTermes}{ptm}
+
+% Really Helvetica: (Not currently defined in microtype.)
+\DeclareMicrotypeAlias{TeXGyreHeros}{phv}
+
+% Really Avant Garde: (Not currently defined in microtype.)
+\DeclareMicrotypeAlias{TeXGyreAdventor}{pag}
+
+% Really Euler:
+\DeclareMicrotypeAlias{NeoEuler}{eus}
+
+% In Palatino Linotype (v5.00), subscripts are incorrectly encoded as small
+% caps, and errors in the smcp table (particularly for numbers and the letter
+% i) make the small caps variant unusable.  TeX Gyre Pagella makes a good
+% alternative, particularly for small-caps i.  Another workaround is to decl-
+% are numbers in small caps text as \upshape.
+\setmainfont[ Numbers={Proportional, OldStyle},
+\ifluatex     Renderer=Basic,				\fi
+%              SmallCapsFont={TeX Gyre Pagella},
+%              SmallCapsFeatures={Letters=SmallCaps},
+              Ligatures={Common, Rare, TeX},
+            ]{Palatino Linotype}
+
+% Or this free alternative:
+%\setmainfont[ Numbers={Proportional},
+%               Ligatures={Common, Rare, TeX},
+%             ]{TeX Gyre Pagella}
+
+% Gillius ADF No2 (a Gill Sans clone) is a good match for Palatino.  It does
+% not, however, come with small caps features.
+\setsansfont[ Ligatures={Common, TeX}
+            ]{Gillius ADF No2}
+% Alternatives:
+% \setsansfont[Ligatures={Common,TeX}]{Myriad Web Pro}
+% \setsansfont[Ligatures={Common,TeX}]{TeX Gyre Adventor}
+
+\setmonofont{Inconsolata}
+
+\setmathfont{Asana Math}
+
+% Math versions currently don’t appear to work with range.  As a workaround,
+% XITS Math is heavier and more condensed than Asana Math, hence a better
+% match for the display font.
+%
+% In the current version of the unicode-math package, putting this declaration
+% here, between setting the default math font and setting the \mathcal and
+% \mathbfcal alphabets, makes \mathversion{bold} change fonts except for the
+% \mathcal and \mathbfcal.  That’s not perfect, but we want \mathbfcal anyway.
+\setmathfont[version=bold, Scale=MatchUppercase]{XITS Math}
+
+% Annoyingly, the stylistic alternate feature is currently broken in LuaLaTeX.
+% Workaround: Both XITS Math and Latin Modern Math have basically the identic-
+% al \mathcal alphabet.
+% \ifluatex
+%	\setmathfont[ range={\mathcal,\mathbfcal},
+%                      StylisticSet=1,
+%                      Scale=MatchUppercase
+%                    ]{XITS Math}
+%\else
+%	\setmathfont[range={\mathcal,\mathbfcal},Alternate]{Asana Math}
+%\fi
+%
+% I like the calligraphic letters in Hermann Zapf's Euler; they match his Pal-
+% atino well.
+\setmathfont[ range={\mathcal,\mathbfcal},
+              Scale=MatchUppercase
+            ]{Neo Euler}
+
+\newfontface\titleface[ Letters=SmallCaps,
+                        Numbers={Proportional, Lining},
+                        Ligatures={Common, Rare, TeX}
+                      ]{TeX Gyre Pagella}
+\DeclareRobustCommand{\fixsc}[1]{{\titleface {#1}}}
+\newfontface\captionface{Gillius ADF No2}
+\newfontfamily\labelfamily[ Numbers={Monospaced},
+                            Scale=MatchUppercase]{TeX Gyre Heros}
+\newfontfamily\headerfamily[ Scale=MatchUppercase,
+%                             Numbers={Proportional, Lining}
+                           ]{Gillius ADF No2}
+% \newfontfamily\headerfamily{TeX Gyre Adventor}
+
+% Select the double-barred dollar sign:
+\DeclareRobustCommand{\vardollar}{{\rmfamily\addfontfeature{RawFeature=+salt} \char"0024}}
+
+% Examples of patching in symbols missing from the main font:
+\newunicodechar{₲}{{\fontspec[Scale=MatchUppercase]{Charis SIL}₲}}
+\newunicodechar{₪}{{\fontspec{Charis SIL}₪}}
+\newunicodechar{℠}{{\fontspec{TeX Gyre Pagella}℠}}
+\newunicodechar{ϵ}{\ifmmode ϵ
+  \else
+    {\fontspec{Asana Math}ϵ}
+\fi}
+\newunicodechar{ϱ}{\ifmmode ϱ
+  \else
+    {\fontspec{Asana Math}ϱ}
+\fi}
+\newunicodechar{∎}{\ifmmode ∎
+  \else
+    {\fontspec{XITS}∎}
+\fi}
+
+% Use true superscripts for footnotes:
+
+
+% Theoretical computer science papers use a lot of math.  A lot of math.
+% Much of which appears in the middle of a paragraph.  Numbers in math mode
+% must not be oldstyle.  Therefore, numbers in the body text should be lining
+% numbers so as not to clash with the numbers in equations.  They’re also
+% unaesthetic in the title.  I can, however, use old-style numbers in contexts
+% such as page and section numbers.
+
+% KOMA sets the title font to the sans font, but not the author and date.
+% I prefer this style:
+\addtokomafont{title}{\normalfont\titleface}
+\addtokomafont{pagination}{\normalfont\addfontfeature{Numbers=OldStyle}}
+\addtokomafont{caption}{\normalfont}
+\addtokomafont{captionlabel}{\normalfont\captionface}
+\addtokomafont{disposition}{\headerfamily\bfseries\upshape\mathversion{bold}}
+
+\def\thesection{\liningnums{\arabic{section}}}
+\def\thesubsection{\liningnums{\arabic{section}}.\oldstylenums{\arabic{subsection}}}
+
+\renewcommand*{\othersectionlevelsformat}[1]{\makebox[0pt][r]{\labelfamily \csname the#1\endcsname\autodot\enskip}}
+
+% This sample code from the microtype manual protrudes footnotes:
+\SetProtrusion[context=footnote]%
+    {font=*/*/*/*/scriptsize}%
+    {1={,650},%
+    2={,400},%
+    3={,400},%
+    4={,400},%
+    5={,400},%
+    6={,400},%
+    7={,500},%
+    8={,400},%
+    9={,400},%
+    0={,400}} 
+
+% Display uppercase letters in acronyms as small caps.
+\DeclareRobustCommand{\abbrev}[1]{{\addfontfeature{Letters=UppercaseSmallCaps}{#1}}}
+
+% The current version of Asana Math no longer displays \leq and \geq incor-
+% rectly.  There is no longer any need to swap in operators from Latin Modern
+% Math.
+
+% The Asana Math code block ends here.
+
+% Uncomment this to use XITS:
+% XITS is based on Times, but lacks a small-caps style.  Thus, I use TeX Gyre
+% Termes for this purpose.
+% \setmainfont[Ligatures={Common,TeX},
+%             SmallCapsFont={TeX Gyre Termes},
+%             SmallCapsFeatures={Letters=SmallCaps}
+%            ]{XITS}
+% \setsansfont[Numbers=Proportional,Ligatures={Common,TeX}]{TeX Gyre Adventor}
+% \setmonofont{Inconsolata}
+% \setmathfont{XITS Math}
+
+% XITS Math has unattractive Greek letters.  GFS Artemisia seems to go well
+% with it, but does not contain several glyphs, notably \epsilon, and doesn't
+% handle \theta, \vartheta, \phi or \varkappa well.  DejaVu Serif just works,
+% albeit with spurious warnings.
+% \setmathfont[range=\mathit/{greek,Greek}]{DejaVu Serif Italic}
+% \setmathfont[range=\mathbfit/{greek,Greek}]{DejaVu Serif Italic}
+% \setmathfont[range=\mathup/{greek,Greek}]{DejaVu Serif}
+% \setmathfont[range=\mathbfup/{greek,Greek}]{DejaVu Serif Bold}
+% \setmathfont[range=\mathsfup/{greek,Greek}]{DejaVu Sans}
+% \setmathfont[range=\mathsfit/{greek,Greek}]{DejaVu Sans Oblique}
+% \setmathfont[range=\mathbfsfup/{greek,Greek}]{DejaVu Sans Bold}
+% \setmathfont[range=\mathbfsfit/{greek,Greek}]{DejaVu Sans Bold Oblique}
+% \setmathfont[range=\mathtt/{greek,Greek}]{DejaVu Sans Mono}
+
+% Special math symbols:
+% \setmathfont[range={\mathcal,\mathbfcal},StylisticSet=1]{XITS Math}
+
+% The XITS Math code block ends here.
+
+% Uncomment this to use Latin Modern:
+% \setmainfont[SmallCapsFont={Latin Modern Roman Caps}]{Latin Modern Roman}
+% \setsansfont[Ligatures={Common,TeX}]{Latin Modern Sans}
+% \setmonofont[SmallCapsFont={Latin Modern Mono Caps}]{Latin Modern Mono}
+
+% \setmathfont{Latin Modern Math}
+
+% Special math symbols:
+% \setmathfont[range={\mathcal,\mathbfcal},StylisticSet=1]{XITS Math}
+% \setmathfont[range={\mathscr,\mathbfscr}]{XITS Math}
+
+% The Latin Modern code block ends here.
+
+% The Q.E.D. symbol was not showing up properly, forcing me to redefine it.
+% The reason turned out to be that the unicode-math package maps the
+% \qedsymbol command to a code point my font used for a different glyph.
+% This meant I got to research the history of the symbol and decide which
+% variant to use.
+%
+% Paul Halmos first introduced it to mathematics, and one name for it is
+% therefore the Halmos symbol.  In other contexts, it's called the tombstone.
+% Most of his papers scanned by Google do not in fact use the symbol, but his
+% text on measure theory uses a filled rectangle.  His autobiography says
+% it "sometimes looks like" an empty rectangle.  The festschrift _Paul Halmos:
+% Celebrating 50 Years of Mathematics_ uses an empty diamond.  The more recent
+% textbooks I checked used either the TeX-default empty square or a filled
+% square.
+% 
+% I therefore feel justified in using the Unicode character for Q.E.D. and
+% choosing its appearance by specifying a math font to take the glyph from.
+% XITS Math uses an attractive filled rectangle, as in Halmos' 1950 book on
+% measure theory and the 1997 edition of Donald Knuth's own _The Art
+% of Computer Programming_.
+
+\DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"220E}}
+
+% For a filled rectangle:
+\setmathfont[range="220E]{XITS Math}
+% For a small, filled box:
+% \setmathfont[range="220E]{Asana Math}
+% For a large, filled box:
+% \setmathfont[range="220E]{Latin Modern Math}
+% For a large, filled rectangle:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25AE}}
+% For a small, filled rectangle:
+% \DeclareRobustCommand{\qedsymbol}{\footnotesize\ensuremath{\char"25AE}}
+% For a large, empty rectangle:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25AF}}
+% For a small, empty rectangle:
+% \DeclareRobustCommand{\qedsymbol}{\footnotesize\ensuremath{\char"25AF}}
+% For a large, empty box:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25A1}}
+% For a medium, empty box:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25FB}}
+% For a small, empty box:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25FD}}
+% For a smaller, empty box:
+% \DeclareRobustCommand{\qedsymbol}{\ensuremath{\char"25AB}}
+
+% The unicode-math package does not redefine the following symbols (inter al-
+% ia), or does not assign them to their Unicode code points.  Note that the
+% following will only work if the current font contains the given symbol.  It
+% is, however, possible to pick a Unicode symbol font for each code point.
+% Source: The Comprehensive LaTeX Symbol List, Scott Pakin, November 2009.
+%
+% Note that these symbols must be present in the current font to work.  If one
+% isn’t, consider assigning that range to a font that does.  XITS and DejaVu
+% Sans are usually good bets.
+%
+% Compatibility with amssymb:
+\DeclareRobustCommand\circledR{®}
+
+% Compatibility with textcomp:
+\DeclareRobustCommand\textguarani{₲}
+
+\DeclareRobustCommand\textcopyleft{\reflectbox{\textcopyright}}
+
+% Current versions of fontspec redefine \oldstylenums to use the OpenType
+% feature.
+\DeclareRobustCommand\textzerooldstyle{\oldstylenums{0}}
+\DeclareRobustCommand\textoneoldstyle{\oldstylenums{1}}
+\DeclareRobustCommand\texttwooldstyle{\oldstylenums{2}}
+\DeclareRobustCommand\textthreeoldstyle{\oldstylenums{3}}
+\DeclareRobustCommand\textfouroldstyle{\oldstylenums{4}}
+\DeclareRobustCommand\textfiveoldstyle{\oldstylenums{5}}
+\DeclareRobustCommand\textsixoldstyle{\oldstylenums{6}}
+\DeclareRobustCommand\textsevenoldstyle{\oldstylenums{7}}
+\DeclareRobustCommand\texteightoldstyle{\oldstylenums{8}}
+\DeclareRobustCommand\textnineoldstyle{\oldstylenums{9}}
+
+% Additional, non-historical currency symbols defined in Unicode:
+\DeclareRobustCommand\textcruzeiro{₢}
+\DeclareRobustCommand\textmill{₥}
+\DeclareRobustCommand\textsheqel{₪}
+\DeclareRobustCommand\textkip{₭}
+\DeclareRobustCommand\texttugrik{₮}
+\DeclareRobustCommand\textthyrvnia{₴}
+\DeclareRobustCommand\textcedi{₵}
+\DeclareRobustCommand\textrupee{₹}
+
+%% Below this section, underscores again mean subscripts in math mode.
+\ExplSyntaxNamesOff
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% If replacing all of that with house-style boilerplate, cut above here.    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\theoremstyle{plain}% default
+\newtheorem*{thm}{Theorem}
+\newtheorem*{lem}{Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem*{cor}{Corollary}
+\theoremstyle{definition}
+\newtheorem*{defn}{Definition}
+\newtheorem{conj}{Conjecture}
+\newtheorem{exmp}{Example}
+\newtheorem*{sol}{Solution}
+\theoremstyle{remark}
+\newtheorem*{rem}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{case}{Case}
+\newtheorem*{basis}{Basis}
+\newtheorem*{indstep}{Induction Step}
+
+% Differential operator, e.g. \d{x} \d{y}.
+\DeclareRobustCommand{\dwrt}[1]{\ensuremath\mathop{\mathup{d}{#1}}}
+% Slash fractions:
+\DeclareRobustCommand{\slfrac}[2]{\left. {#1} \middle\fracslash {#2} \right.}
+% A | B
+\DeclareRobustCommand{\given}[2]{\left. {#1} \middle\vert {#2} \right.}
+% Absolute value
+% \DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclareRobustCommand{\abs}[1]{\left\lvert {#1} \right\rvert}
+% Norm
+% \DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclareRobustCommand{\norm}[1]{\left\lVert {#1} \right\rVert}
+% Rmax
+\DeclareRobustCommand{\Rmax}{\ensuremath{\mathit{R}_\mathrm{max}}}
+% The constant e
+\DeclareRobustCommand{\eu}{\ensuremath\mathup{e}}
+% I.e. and i.e.
+\DeclareRobustCommand{\ie}{\emph{i.e.\ }}
+\DeclareRobustCommand{\Ie}{\emph{I.e.\ }}
+% E.g. and e.g.
+\DeclareRobustCommand{\eg}{\emph{e.g.\ }}
+\DeclareRobustCommand{\Eg}{\emph{E.g.\ }}
+% Q.v. and q.v.
+\DeclareRobustCommand{\qv}{\emph{q.v.\ }}
+\DeclareRobustCommand{\Qv}{\emph{Q.v.\ }}
+% Cf.
+\DeclareRobustCommand{\Cf}{\emph{Cf.\ }}
+
+% This is a fallback in case you have to remove the definition above.
+\providecommand{\abbrev}[1]{{\scshape {#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\testchar}{\footnotemark}
+\newcommand{\testhere}{\testchar \qquad \testchar}
+
+\title{CS \textup{533}\quad{}Project II}
+\author{Loren B.\ Davis}
+\date{\oldstylenums\today}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This paper describes a library to solve problems in a parking-lot microworld.  (Summary of the problem description omitted.)  The author implemented the solver using model-based reinforcement learning, in Haskell.  This paper discusses some limitations and issues of scalability.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+This paper assumes familiarity with the assignment and the author’s implementation of Mini-Project I.  Mini-Project II builds on the architecture of Project I, with some refactoring.  Most significantly, the code is now separated into three modules, with the implementation of part I (very similar to the implementation of project I) in \texttt{MDP.hs}, the implementation of part II in \texttt{MDPSum.hs} and the implementation of part III in {ADP.hs}.  The code for part II calls the code from part I, and the code from part III calls the code from parts I and II.  As at one point the author profiled the code for part II and added bang patterns (forcing strict rather than lazy evaluation of some function arguments, where it would help), \abbrev{GHC} therefore requires the \texttt{-XBangPatterns} flag to compile it.  The author tested this code by first running \texttt{make} to compile the modules to optimized code, then \texttt{ghci -Wall -O2 -funbox-strict-fields -fllvm -msse2 -fobject-code -XBangPatterns ADP.hs} to run interactively.  It would also be possible to compile with the \texttt{-e} switch, as the \texttt{lessBad} example in the makefile does.  The makefile also contains an example of compiling with profiling turned on.
+
+This project has three parts.  As the first is virtually identical to the first mini-project, and so is the implementation, the author refers you to his previous paper.  The major addition are a handful of utility functions to convert internal data into a human-readable form.
+
+The second part involves simulation, and is covered in Section \ref{sec:simulation}.  The third involves reinforcement learning, and is covered in Section {sec:reinforcement}.
+
+The source code uses a literate style of programming, and therefore full documentation for each of the functions below can be found in the comments there.
+
+\section{Policy Simulation}\label{sec:simulation}
+The \texttt{MDPSim} module implements a library to simulate arbitrary \abbrev{MDPs}, and also a number of utility functions and a handful of examples related to the the parking problem specifically.
+
+\subsection{Simulating Arbitrary \abbrev{MDPs}}\label{sec:simmdp}
+The most important functions for this purpose are \texttt{simulateMDP}, \texttt{bandit} and \texttt{evaluateParkingPolicy}.
+
+The \texttt{MDPSim.simulateMDP} function takes an \abbrev{MDP}, an agent policy, and several other parameters, such as the initial and terminal states (assumed to be unique, without loss of generality), and simulates a single run of the agent through that \abbrev{MDP}.  Its output is a list of \( \left(\textrm{State}, \textrm{Action}, \textrm{Reward}\right) \) triples representing the agent’s situation at each time step and the next action it chose.
+
+The \texttt{MDPSim.bandit} function takes an \abbrev{MDP}, a discount factor \(\gamma\), initial and terminal states, an agent policy, and runs the agent once through that \abbrev{MDP} following that policy.  Instead of returning detailed information about the results of the run, it calculates the time-discounted cumulative reward.
+
+The \texttt{MDPSim.evaluateParkingPolicy} function runs an agent through a given number of simulations, starting from a randomly-determined state, then averages the cumulative rewards to measure the quality of a policy.  Specifically, it generates a position in front of any parking space with uniform probability, and then simulates the drive action once, so that the agent is equally likely to start out in front of any space, and the probability that the space will be taken is realistic.
+
+\subsection{Application to the Parking Problem}\label{sec:simpark}
+The \texttt{MDP.ParkingProblem} function generates \abbrev{MDP} descriptions of arbitrary parking problems; there are a few examples in the file, of which \texttt{MDPSim.mdp4spaces} is small enough to be easily verified by a human, and \texttt{MDPSim.mdp10spaces} is an interesting but reasonable size.  Also helpful is the \texttt{MDPSim.optimalPolicy} function, which uses the policy iteration function from project I to solve a given \abbrev{MDP}, then converts its output into a policy of the form expected by this project.  The corresponding optimal policies for these examples are \texttt{MDPSim.pi4spaces} and {MDPSim.pi10spaces}.
+
+The library also contains functions for generating random and handcrafted policies.  The \texttt{randomPolicy} \(r\) \(p\) function will generate a policy for the parking problem with \(r\) rows that always parks with probability \(p\) and drives otherwise.  Improving on this, \texttt{neverCrashPolicy} will always drive past a filled space, and \texttt{lessBadPolicy} will never parked in a handicapped space, will always park on an empty space in row 2, and will park in any other empty space in row \(i\) with probability \(\slfrac{p}{i}\).
+
+\subsection{Examples}\label{sec:simexamples}
+A sample run of an agent through the smaller example, using the optimal policy:
+
+\begin{verbatim}
+*ADP> simulateMDP mdp4spaces pi4spaces ( encodeState 2 (A 1 False) ) 0 10000
+[(6,0,-1.0e-2),(10,0,-1.0e-2),(11,1,-1.0e-2),(3,1,0.5),(0,1,0.0)]
+*ADP> decodeResults 2 it
+[(A 1 False,"Drive"),(B 1 False,"Drive"),(B 2 False,"Park"),(P 2,"Park"),(Exit,"Park")]
+\end{verbatim}
+
+The second line puts the results, one per time step, into human-readable form.  The agent starts in row A, space 1, with the space empty.  The optimal policy does not park in this spot, which is a handicap space.  It drives to row B, space 1, which is also a handicap space.  It keeps driving to row B, space 2, and finds it empty.  It parks there, transitions to the state where it collects its reward for parking in row 2, and there to the terminal state.  We can refer to the first line for the rewards: we accumulate small penalties of size \(\iota\) until we park, then a reward of size \(\frac{1}{2}\) for parking in row 2, then zero reward in the terminal state.
+
+Here are some examples of policy evaluation:
+
+\begin{verbatim}
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 (randomPolicy 10 0.6) 10000
+-30.904503535201588
+
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 (neverCrashPolicy 10 0.6) 10000
+-1.8747353656452381
+
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 (lessBadPolicy 10 1.0) 10000
+4.4101490388976275e-2
+
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 pi10spaces 10000
+0.1472353798151275
+\end{verbatim}
+
+We see that a policy of randomly parking 60\% of the time is terrible.  Simply never crashing makes it substantially better, and the simple handcrafted policy barely breaks even.  Finally, the optimal policy is about three times as good as the simple handcrafted policy.
+
+\subsection{Implementation Issues}\label{sec:simimp}
+By far the most difficult aspect of implementing this project in Haskell was the need to program with monads.  It is impossible to do input, output or, as it turns out, probability in Haskell without encapsulating computations in monads.  The only one-sentence description of monads the author was able to get Dr. Martin Erwig to accept was, ”An object that obeys the rules of monads.”\footnote{Personal conversation, March 2012.  And no, he didn’t put me up to it.}  Be warned that the extremely simplified description of the purpose they serve in this project is ”not the most general case.”  For some reason, very few people who are capable of understanding monads ever bother.  As a result of this project, the author now personally understands monads much better than before; that is, precisely as well as he needed to in order to complete this project.
+
+One thing that monads can do (But not the most general!) is encapsulate computations that have to occur in a specific sequence within what is otherwise a pure functional language, in which no other computations have side-effects.  For example, input and output have to occur in proper sequence because they have side effects, and the program would otherwise produce garbled nonsense.  It so happens that Haskell’s implementation of random numbers also has side-effects, because it alters the state of the random-number generator, even when the programmer does not require deterministic pseudo-random number generation and is totally indifferent to the order of calls to the \abbrev{RNG}.  This means that any randomly-generated double-precision number is not a \texttt{Double}, but an \texttt{IO Double}, which is a number that needs to be wrapped in a monad whose computation has side-effects.  Furthermore, any computation that uses that value, such as the action some agent chooses in a given state, now becomes a computation that has side-effects as well, and so does anything that refers to it, in a chain that works like quarantine.  This requires a substantial amount of very complicated glue to interact with anything: one thing you can specifically \emph{not} do is turn the monadic computation into a precomputed value and then use it normally.  So, one winds up writing code such as the following:
+
+\begin{verbatim}
+evaluateParkingPolicy :: MarkovDP -> Double -> Policy -> Int -> IO Double
+evaluateParkingPolicy !mdp !gamma !policy !k = do
+  utilities <- replicateM k ( bandit' mdp gamma 0 (initialState mdp) policy )
+  return ((sum utilities) / fromIntegral k)
+\end{verbatim}
+
+This code is hardly lengthy (\abbrev{APL} would almost be proud), nor is its internal logic that complicated when one understands what it does.  The \texttt{bandit} function expects an initial state argument, not an initial-state-whose-computation-has-side-effects argument, and a randomly-generated initial state has side effects because it’s randomly-generated.  So, as syntactic sugar, the program implements a new function, \texttt{bandit\textsuperscript\prime}, which is just like \texttt{bandit} except that it expects its initial-state argument to be wrapped in a monad.  Its \emph{raison d’être} is specifically to simplify the above code.  The first line of the function body runs the bandit computation \(k\) times on different initial states, with non-deterministic results, and concatenates the outcomes into a list of cumulative rewards whose computation has side effects.  It stores that as \texttt{utilities}, which one can use as if it were an unadorned list in some but not all contexts within the function.  The second line takes the mean of this list and returns it as a \texttt{Double} whose computation has side-effects.  This is, however, sufficiently different from pure Haskell that figuring out which two lines to use is much trickier than it looks.
+
+There was also one strange optimizer bug in \texttt{ghci 7.0.3} that caused a list of results to appear in reverse order; it was easier to slightly tweak the source so as not to expose it than to attempt to debug it.
+
+\section{Reinforcement Learning}\label{sec:reinforcement}
+Part III of the exercise concerned a reinforcement-learning agent.  This implementation used an \(\varepsilon\)-greedy, model-based approach: the learning process read in a policy \(\pi\) and transformed it into an \(\varepsilon\)-greedy policy, which followed \(\pi\) with probability \(1-\varepsilon\) and chose an action uniformly at random with probability \(\varepsilon\).  It then ran that \(\varepsilon\)-greedy policy through \(k\) runs of a simulator (on which more below) and used the results to calculate a model of the reward and transition functions.  Specifically, it made the assumption that \(R\) is a function of state and treated states never reached as having reward 0, and based its estimate of the transition probabilities \( T\left(s,a,s'\right) \) on the proportion of agents that started out in state \(s\), took action \(a\) and transitioned to state \(s'\).  If a state-action pair was never explored, this implementation made the arbitrary decision to model it as going directly to the terminal state, which turned out to have consequences that will be discussed in section \ref{sec:rebugs}.  It also assumes that the terminal state always transitions to itself.  It then solved that model using the policy-iteration algorithm from part I and returned the optimal policy for that model.
+
+The most important function in this module is \texttt{ADP.epsilonGreedyAgent}, which learns an approximation of the optimal policy.  Also important is \texttt{ADP.fromMDP}, which converts an \abbrev{MDP} into a simulator, which is an object that takes an agent policy and returns the results of one run through the world represented by that \abbrev{MDP}, but completely hides the internal details of its model to the caller.  (The current version of the algorithm does need to be told how many states and actions there are, but not to use the simulator.)  In this implementation, the caller cannot specify an initial state.  Otherwise, the logical course of action would be to simulate every state-action pair sufficient times to be confident that the learning process has derived the full transition function, which seemed less in the spirit of the assignment than what \texttt{epsilonGreedyAgent} currently does.
+
+\subsection{Examples}
+
+This code runs the reinforcement-learning process over 1,000 runs, starting with a random policy on the same 10-row example as in section \ref{sec:simexamples}.
+
+\begin{verbatim}
+*ADP> let simulator = fromMDP mdp10spaces
+*ADP> let initialPolicy = randomPolicy 10 0.5
+*ADP> let learnedPolicy = epsilonGreedyAgent 52 2 0 initialPolicy 0.98 simulator 0.0 5000
+*ADP> epsilonGreedyAgent 52 2 0 initialPolicy 0.98 simulator 0.0 1000
+\end{verbatim}
+
+We omit the output of this, but store it in a variable so we can refer to the same policy later rather than generate a different one:
+
+\begin{verbatim}
+*ADP> let learnedPolicy = it
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 learnedPolicy 10000
+-5.3288869977143216e-2
+\end{verbatim}
+
+The results are variable, sometimes slightly worse than the handcrafted policy and sometimes slightly better.  What happens when we feed our learned policy back into the process for another 1,000 runs?
+
+\begin{verbatim}
+*ADP> epsilonGreedyAgent 52 2 0 learnedPolicy 0.98 simulator 0.2 1000
+\end{verbatim}
+[Output redacted]
+\begin{verbatim}
+*ADP> let learnedPolicy' = it
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 learnedPolicy' 10000
+3.253799040606868e-2
+\end{verbatim}
+
+Although this appears to beat the handcrafted policy, the difference in performance between the learned policies and the handcrafted policy are not statistically significant.  To get a significantly better result, one must run substantially longer, in this case, 10,000 iterations.  Unfortunately, and especially in interpreted code, the algorithm does not scale well with \(k\):
+
+\begin{verbatim}
+*ADP> epsilonGreedyAgent 52 2 0 learnedPolicy' 0.98 simulator 0.2 10000
+\end{verbatim}
+[Output redacted]
+\begin{verbatim}
+*ADP> let betterPolicy = it
+*ADP> evaluateParkingPolicy mdp10spaces 0.98 betterPolicy 10000
+0.1171507299993456
+\end{verbatim}
+
+This is two orders of magnitude better than before, and only \(\approx 20\%\) worse than the optimal policy.  Even so, where is this difference coming from?
+
+\subsection{”Limitations”}\label{sec:rebugs}
+Any difference in policy performance must be attributable to a difference in the actions chosen by the policy.  Let us see when our policies tell us to park (slightly reformatted for clarity):
+
+\begin{verbatim}
+*ADP> decodePolicy 10 learnedPolicy 
+[Exit,Crash,P 1,P 2,P 3,P 4,P 5,P 6,P 7,P 8,P 9,P 10,
+A 8 True,A 9 True,A 10 True,
+A 2 False,A 3 False,A 4 False,A 5 False,
+B 8 True,B 9 True,B 10 True,
+B 2 False,B 3 False,B 4 False,B 5 False,B 6 False,B 7 False,B 8 False,B 9 False]
+*ADP> decodePolicy 10 learnedPolicy'
+[Exit,Crash,P 1,P 2,P 3,P 4,P 5,P 6,P 7,P 8,P 9,P 10,
+A 8 True,A 9 True,A 10 True,
+A 2 False,A 3 False,A 4 False,A 5 False,
+B 9 True,B 10 True,
+B 2 False,B 3 False,B 4 False,B 5 False,B 6 False,B 7 False,B 8 False,B 9 False]
+*ADP> decodePolicy 10 betterPolicy 
+[Exit,Crash,P 1,P 2,P 3,P 4,P 5,P 6,P 7,P 8,P 9,P 10,
+A 9 True,A 10 True,
+A 2 False,A 3 False,A 4 False,A 5 False,
+B 9 True,B 10 True,
+B 2 False,B 3 False,B 4 False,B 5 False,B 6 False,B 7 False,B 8 False,B 9 False]
+*ADP> decodePolicy 10 pi10spaces  
+[Exit,Crash,P 1,P 2,P 3,P 4,P 5,P 6,P 7,P 8,P 9,P 10,
+A 2 False,A 3 False,A 4 False,A 5 False,
+B 2 False,B 3 False,B 4 False,B 5 False,B 6 False,B 7 False,B 8 False,B 9 False]
+\end{verbatim}
+
+Recall that the last policy is optimal.  We can ignore the cases \texttt{Exit}, \texttt{Crash} and \texttt{P} \(i\), as actions taken here are irrelevant; the implementation of policy iteration happens to pick the park action in such cases by default.  We are interested in the cases labeled: column letter, row number, full or not.  As you see, the policies all correctly deduce when to park in an empty space, but sometimes crash the car in a filled space at the far end of the row, and the more training the agent had, the further out it has to be to make this mistake.  You now have enough information to diagnose the bug.
+
+What happened (one silver lining of writing the code as a monad is that it’s easy to insert instrumentation for debugging) is that the probability of a space being full decreases with distance.  The agent will rarely drive that far out without parking somewhere else, unless it starts there, which it rarely will.  Furthermore, an agent policy that isn’t brain-dead won’t take the park action in that situation, so that already-low probability will only occur when the agent additionally chooses to explore and then randomly picks the park action, with probability \(\slfrac{\varepsilon}{2}\).  What is going on here is that the agent has little or no training data for what would happen if one of those spaces were full, so it defaults to the assumption that the simulation would end with no further reward.  The learning process has no domain-specific knowledge, and so doesn’t know that the safe action is to drive rather than park.  So, by an implementation quirk, it defaults to trying to park.  It would be possible to fix this, but not in any general way.  These are rare events, so they only reduce the score by a small amount, but the more of them there are, the more likely at least one of them is to occur.  Their prevalence could be reduced by increasing the number of trials, increasing the probability for rare events to happen in the training data, or changing the problem itself so that there are fewer surprises such as this.
+
+\end{document}
