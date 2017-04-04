@@ -108,7 +108,7 @@ policyIterate (n, m, r, t) gamma = (v', pi'', translatePIUpdates updates'' )
               a :: Matrix Double
               a = build (n,n) updateHelper
               b :: Matrix Double
-              b = build (n,1) (\a _ -> let i = truncate a in - (r!i))
+              b = build (n,1) (\a _ -> let i = truncate a :: Int in - (r!i))
               x :: Matrix Double
               x = linearSolveSVD a b
             in
