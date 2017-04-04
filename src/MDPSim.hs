@@ -18,10 +18,11 @@
  -}
 
 module MDPSim where
-import Control.Monad
-import Control.Monad.Random
-import Data.Array.Unboxed
-import Data.List
+import Control.Monad (liftM, replicateM)
+import Control.Monad.Random (Rand, RandomGen, evalRandIO, getRandom,
+                             getRandomR, getRandoms)
+import Data.Array.Unboxed (UArray, (!), array, assocs, bounds)
+import Data.List (findIndex, findIndices)
 import Prelude hiding (pi)
 
 import MDP
