@@ -9,13 +9,13 @@ module MDP {- ( MarkovDP, State, Action, policyIterate, showUpdates, test4x3,
              showT, decodeT, whenToPass, whenToPark, parkingProblem,
              ParkingState, encodeState, decodeState ) -}
   where
-import Data.Array.Unboxed
-import Data.List
-import Data.Ord
+import Data.Array.Unboxed (UArray, (!), accumArray, assocs, listArray)
+import Data.List (maximumBy, (\\))
+import Data.Ord ()
 import Numeric.LinearAlgebra (Matrix, Vector, build, linearSolveSVD, toLists)
 -- import Numeric.LinearAlgebra hiding (i)
 -- import Numeric.LinearAlgebra.Algorithms hiding (i)
-import Prelude hiding (pi)
+import Prelude hiding(pi)
 {- This program uses the hmatrix package (cabal install hmatrix) rather than
  - attempt to reinvent the wheel.  You might also need to install libgsl,
  - liblapack, and possibly MKL or ATLAS.
@@ -98,17 +98,17 @@ policyIterate (n, m, r, t) gamma = (v', pi'', translatePIUpdates updates'' )
  -}
         v = let
               updateHelper :: Double -> Double -> Double
-              updateHelper a b = gamma * (t!(i,pi!i,j)) -
+              updateHelper w z = gamma * (t!(i,pi!i,j)) -
                                            (if i == j then 1.0 else 0.0)
                 where
                   i :: Int
-                  i = truncate a
+                  i = truncate w
                   j :: Int
-                  j = truncate b
+                  j = truncate z
               a :: Matrix Double
               a = build (n,n) updateHelper
               b :: Matrix Double
-              b = build (n,1) (\a _ -> let i = truncate a :: Int in - (r!i))
+              b = build (n,1) (\y _ -> let i = truncate y :: Int in - (r!i))
               x :: Matrix Double
               x = linearSolveSVD a b
             in

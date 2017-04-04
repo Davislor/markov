@@ -1,4 +1,4 @@
-{- MDPSim.hs		Code for CS 533, Mini-Project 2.
+{- MDPSim.hs        Code for CS 533, Mini-Project 2.
  -
  - Copyright © 2012 Loren B. Davis.  ALL RIGHTS RESERVED.  I hereby release
  - this code under the MIT License: (http://www.opensource.org/licenses/MIT).
@@ -9,7 +9,7 @@
  - 
  - cabal install monadrandom
  -
- - To run in the REPL:		ghci MDPSim.hs
+ - To run in the REPL:      ghci MDPSim.hs
  - (Now renamed so that GHCI can find the right object files.)
  -}
 
@@ -85,11 +85,11 @@ decodeResults' rows = liftM (decodeResults rows)
  -
  - Parameters:
  -
- - mdp:		A description of the MDP
+ - mdp:     A description of the MDP
  - policy:      The policy for the agent to follow.
- - initial:	The initial state
- - terminal:	The terminal state (assumed unique, WLOG)
- - k:		The time horizon.
+ - initial: The initial state
+ - terminal:    The terminal state (assumed unique, WLOG)
+ - k:       The time horizon.
  -
  - Returns a MDPresults list representing the states reached, actions taken
  - and discounted rewards at each time step.
@@ -128,18 +128,18 @@ simulateMDP !(n,m,r,t) !policy !initial !terminal !horizon = do
  -
  - Parameters:
  -
- - s:	The current state of the agent
- - k:		The remaining time horizon.
- - randList:	An infinite list of (pseudo-)random variables ~ uniform(0,1).
+ - s:   The current state of the agent
+ - k:       The remaining time horizon.
+ - randList:    An infinite list of (pseudo-)random variables ~ uniform(0,1).
  - before:      An accumulating list of the results from the previous steps.
  -}
     simulateMDP' !s !k (!x0:(!x1):xs) before
 -- One base case is where the time horizon has expired:
-             | k == 0		= before ++ [(s,a,u)]
+             | k == 0       = before ++ [(s,a,u)]
 -- Another is where the agent is in the terminal state:
-             | s == terminal	= before ++ [(s,a,u)]
+             | s == terminal    = before ++ [(s,a,u)]
 -- Otherwise, we have the recursive case:
-             | otherwise	=  ( simulateMDP'
+             | otherwise    =  ( simulateMDP'
                                          s'
                                          (k-1)
                                          xs ) $!
@@ -198,11 +198,11 @@ simulateDMDP' :: MarkovDP ->
                  MDPresults
 simulateDMDP' (n,m,r,t) gamma policy s terminal k discount
 -- One base case is where the time horizon has expired:
-             | k == 0		= [(s,a,u)]
+             | k == 0       = [(s,a,u)]
 -- Another is where the agent is in the terminal state:
-             | s == terminal	= [(s,a,u)]
+             | s == terminal    = [(s,a,u)]
 -- Otherwise, we have the recursive case:
-             | otherwise	= ((s,a,u):etc)
+             | otherwise    = ((s,a,u):etc)
   where
 -- The next action to take 
     a = case findIndices (== 1.0) pi_s of
