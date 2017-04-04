@@ -7,9 +7,9 @@
 
 module ADP where
 import Prelude hiding (pi)
-import Control.Monad
-import Data.Array.Unboxed
-import Data.List
+import Control.Monad (liftM, replicateM)
+import Data.Array.Unboxed (UArray, array, elems, listArray)
+import Data.List (findIndices, groupBy, sort)
 
 import MDPSim
 import MDP
