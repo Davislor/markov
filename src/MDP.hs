@@ -12,7 +12,7 @@ module MDP {- ( MarkovDP, State, Action, policyIterate, showUpdates, test4x3,
 import Data.Array.Unboxed
 import Data.List
 import Data.Ord
-import Numeric.LinearAlgebra.HMatrix (Matrix, linearSolveSVD, toLists)
+import Numeric.LinearAlgebra (Matrix, build, linearSolveSVD, toLists)
 -- import Numeric.LinearAlgebra hiding (i)
 -- import Numeric.LinearAlgebra.Algorithms hiding (i)
 import Prelude hiding (pi)
@@ -98,10 +98,10 @@ policyIterate (n, m, r, t) gamma = (v', pi'', translatePIUpdates updates'' )
  -}
         v = let
               a :: Matrix Double
-              a = buildMatrix n n  (\(i,j) -> (gamma * t!(i,pi!i,j)) -
+              a = build (n,n) (\i j  -> (gamma * fromIntegral (t!(i,pi!i,j))) -
                                               (if i == j then 1.0 else 0.0))
-              b :: Matrix Double
-              b = buildMatrix n 1 (\(i,_) -> - r!i)
+              b :: Vector Double
+              b = build n (\i -> - (fromIntegral (r!i)) )
               x :: Matrix Double
               x = linearSolveSVD a b
             in
