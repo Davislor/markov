@@ -12,7 +12,8 @@ module MDP {- ( MarkovDP, State, Action, policyIterate, showUpdates, test4x3,
 import Data.Array.Unboxed
 import Data.List
 import Data.Ord
-import Numeric.LinearAlgebra hiding (i)
+import Numeric.LinearAlgebra.HMatrix (Matrix, linearSolveSVD, toLists)
+-- import Numeric.LinearAlgebra hiding (i)
 -- import Numeric.LinearAlgebra.Algorithms hiding (i)
 import Prelude hiding (pi)
 {- This program uses the hmatrix package (cabal install hmatrix) rather than
