@@ -1,4 +1,4 @@
-{- MDP.hs		Code for CS 533, Mini-Project 2.
+{- MDP.hs       Code for CS 533, Mini-Project 2.
  -
  - Copyright © 2012 Loren B. Davis.  ALL RIGHTS RESERVED.  I hereby release
  - this code under the MIT License: (http://www.opensource.org/licenses/MIT).
@@ -12,7 +12,7 @@ module MDP {- ( MarkovDP, State, Action, policyIterate, showUpdates, test4x3,
 import Data.Array.Unboxed
 import Data.List
 import Data.Ord
-import Numeric.LinearAlgebra (Matrix, build, linearSolveSVD, toLists)
+import Numeric.LinearAlgebra (Matrix, Vector, build, linearSolveSVD, toLists)
 -- import Numeric.LinearAlgebra hiding (i)
 -- import Numeric.LinearAlgebra.Algorithms hiding (i)
 import Prelude hiding (pi)
@@ -45,17 +45,17 @@ policyIterate :: MarkovDP ->
                  Double ->
                  (UArray State Double, UArray State Action, [String])
 {- Parameters:
- - process 	= The Markov decision process to solve, in the form
- -		  (|S|,|A|,R,T)
- - gamma 	= The discount parameter, between 0 and 1.
+ - process  = The Markov decision process to solve, in the form
+ -        (|S|,|A|,R,T)
+ - gamma    = The discount parameter, between 0 and 1.
  -
  - Returns (v, pi, updates) where
- - v 		= A size-n array representing the value function.  The expect-
- -		  ed value of being in state s is v[s].
- - pi 		= A size-n array representing the policy.  The action that pi
- -		  will take in state s is pi[s].
- - updates 	= A human-readable list of update strings, one per step of the
- -		  iteration.
+ - v        = A size-n array representing the value function.  The expect-
+ -        ed value of being in state s is v[s].
+ - pi       = A size-n array representing the policy.  The action that pi
+ -        will take in state s is pi[s].
+ - updates  = A human-readable list of update strings, one per step of the
+ -        iteration.
  -
  - This implementation always starts with a policy of taking the first action
  - in any situation.  This is not really correct (the algorithm in the text
@@ -72,13 +72,13 @@ policyIterate (n, m, r, t) gamma = (v', pi'', translatePIUpdates updates'' )
                       [PIUpdate] ->
                       (UArray State Double, UArray State Action, [PIUpdate])
 {- Parameters:
- - pi 		= The initial policy to attempt to improve.
- - updates	= The previous iterations' updates.
+ - pi       = The initial policy to attempt to improve.
+ - updates  = The previous iterations' updates.
  -
  - Returns (v, pi) where
- - v 	= A size-n array representing the value function.  The expected value
+ - v    = A size-n array representing the value function.  The expected value
  -     of being in state s is v[s].
- - pi' 	= A size-n array representing the policy.  The action that pi' will
+ - pi'  = A size-n array representing the policy.  The action that pi' will
  -       take in state s is pi[s].
  - updates' = The list of updates for all iterations of the algorithm.  When
  -            there are no further updates, the algorithm terminates.
@@ -97,11 +97,18 @@ policyIterate (n, m, r, t) gamma = (v', pi'', translatePIUpdates updates'' )
  - time.
  -}
         v = let
+              updateHelper :: Double -> Double -> Double
+              updateHelper a b = gamma * (t!(i,pi!i,j)) -
+                                           (if i == j then 1.0 else 0.0)
+                where
+                  i :: Int
+                  i = truncate a
+                  j :: Int
+                  j = truncate b
               a :: Matrix Double
-              a = build (n,n) (\i j  -> (gamma * fromIntegral (t!(i,pi!i,j))) -
-                                              (if i == j then 1.0 else 0.0))
-              b :: Vector Double
-              b = build n (\i -> - (fromIntegral (r!i)) )
+              a = build (n,n) updateHelper
+              b :: Matrix Double
+              b = build (n,1) (\a _ -> let i = truncate a in - (r!i))
               x :: Matrix Double
               x = linearSolveSVD a b
             in
@@ -354,8 +361,8 @@ factorial = ((scanl (*) 1 [1..]) !!)
 -- The 4x3 world in fig. 17.3 of (Russell & Norvig 2010):
 
 test4x3 :: MarkovDP
-test4x3 = ( 12,	-- The 11 states in the example, plus a terminal state 0.
-            4,	-- Left, right, up, down
+test4x3 = ( 12, -- The 11 states in the example, plus a terminal state 0.
+            4,  -- Left, right, up, down
             listArray (0,11)
                       [0,
                        -0.04, -0.04, -0.04, 1.0,
